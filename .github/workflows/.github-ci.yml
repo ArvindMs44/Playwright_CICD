@@ -1,0 +1,46 @@
+name: Playwright Java CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        java-version: [11] # Specify the Java version(s) you want to use
+        node-version: [16] # Specify the Node.js version(s) you want to use
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install Playwright and Java dependencies
+        run: |
+          npm install -g playwright
+          npx playwright install
+          mvn install
+
+      - name: Run Playwright tests
+        run: mvn test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: target/surefire-reports
